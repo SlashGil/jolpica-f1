@@ -25,6 +25,9 @@ fun JolpicaClient(
 
 interface JolpicaClient {
     suspend fun getSeasons(
+        driverId: String? = null,
+        constructorId: String? = null,
+        circuitId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -32,6 +35,8 @@ interface JolpicaClient {
     suspend fun getCircuits(
         year: String? = null,
         round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -39,6 +44,8 @@ interface JolpicaClient {
     suspend fun getConstructors(
         year: String? = null,
         round: String? = null,
+        driverId: String? = null,
+        circuitId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -46,48 +53,67 @@ interface JolpicaClient {
     suspend fun getDrivers(
         year: String? = null,
         round: String? = null,
+        constructorId: String? = null,
+        circuitId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getDriverStandings(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        driverId: String? = null,
+        position: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getConstructorStandings(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        constructorId: String? = null,
+        position: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getSchedule(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        circuitId: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getRaceResults(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
+        circuitId: String? = null,
+        grid: String? = null,
+        fastest: String? = null,
+        statusId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getQualifyingResults(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
 
     suspend fun getSprintResults(
-        year: String = "current",
+        year: String? = "current",
         round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -95,6 +121,8 @@ interface JolpicaClient {
     suspend fun getPitStops(
         year: String,
         round: String,
+        driverId: String? = null,
+        stopNumber: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -103,6 +131,7 @@ interface JolpicaClient {
         year: String,
         round: String,
         lapNumber: String? = null,
+        driverId: String? = null,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -110,6 +139,14 @@ interface JolpicaClient {
     suspend fun getStatuses(
         year: String? = null,
         round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
+    ): ErgastResponse
+
+    suspend fun getCustomEndpoint(
+        path: String,
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse
@@ -129,114 +166,226 @@ class DefaultJolpicaClient(
         limit: Int? = null,
         offset: Int? = null
     ): ErgastResponse {
-        val url = "$formattedBaseUrl${path.trimStart('/')}"
-        return httpClient.get(url) {
+        val cleanPath = path.trimStart('/')
+        val fullUrl = "$formattedBaseUrl$cleanPath"
+        return httpClient.get(fullUrl) {
             if (limit != null) parameter("limit", limit)
             if (offset != null) parameter("offset", offset)
         }.body()
     }
 
-    override suspend fun getSeasons(limit: Int?, offset: Int?): ErgastResponse {
-        return request("seasons.json", limit, offset)
+    override suspend fun getSeasons(
+        driverId: String?,
+        constructorId: String?,
+        circuitId: String?,
+        limit: Int?,
+        offset: Int?
+    ): ErgastResponse {
+        val path = buildPath(
+            driverId = driverId,
+            constructorId = constructorId,
+            circuitId = circuitId,
+            resource = "seasons.json"
+        )
+        return request(path, limit, offset)
     }
 
     override suspend fun getCircuits(
         year: String?,
         round: String?,
+        driverId: String?,
+        constructorId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = buildPath(year, round, "circuits.json")
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            constructorId = constructorId,
+            resource = "circuits.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getConstructors(
         year: String?,
         round: String?,
+        driverId: String?,
+        circuitId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = buildPath(year, round, "constructors.json")
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            circuitId = circuitId,
+            resource = "constructors.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getDrivers(
         year: String?,
         round: String?,
+        constructorId: String?,
+        circuitId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = buildPath(year, round, "drivers.json")
+        val path = buildPath(
+            year = year,
+            round = round,
+            constructorId = constructorId,
+            circuitId = circuitId,
+            resource = "drivers.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getDriverStandings(
-        year: String,
+        year: String?,
         round: String?,
+        driverId: String?,
+        position: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round/driverstandings.json" else "$year/driverstandings.json"
+        val resource = if (position != null) "driverstandings/$position.json" else "driverstandings.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            resource = resource
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getConstructorStandings(
-        year: String,
+        year: String?,
         round: String?,
+        constructorId: String?,
+        position: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round/constructorstandings.json" else "$year/constructorstandings.json"
+        val resource = if (position != null) "constructorstandings/$position.json" else "constructorstandings.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            constructorId = constructorId,
+            resource = resource
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getSchedule(
-        year: String,
+        year: String?,
         round: String?,
+        circuitId: String?,
+        driverId: String?,
+        constructorId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round.json" else "$year.json"
+        val resource = if (year != null && round == null && circuitId == null && driverId == null && constructorId == null) {
+            "$year.json"
+        } else {
+            ""
+        }
+        val path = if (resource.isNotEmpty()) {
+            resource
+        } else {
+            buildPath(
+                year = year,
+                round = round,
+                circuitId = circuitId,
+                driverId = driverId,
+                constructorId = constructorId,
+                resource = if (year != null && round != null) "" else ".json"
+            ).let { if (it.endsWith(".json")) it else "$it.json" }
+        }
         return request(path, limit, offset)
     }
 
     override suspend fun getRaceResults(
-        year: String,
+        year: String?,
         round: String?,
+        driverId: String?,
+        constructorId: String?,
+        circuitId: String?,
+        grid: String?,
+        fastest: String?,
+        statusId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round/results.json" else "$year/results.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            constructorId = constructorId,
+            circuitId = circuitId,
+            grid = grid,
+            fastest = fastest,
+            statusId = statusId,
+            resource = "results.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getQualifyingResults(
-        year: String,
+        year: String?,
         round: String?,
+        driverId: String?,
+        constructorId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round/qualifying.json" else "$year/qualifying.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            constructorId = constructorId,
+            resource = "qualifying.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getSprintResults(
-        year: String,
+        year: String?,
         round: String?,
+        driverId: String?,
+        constructorId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (round != null) "$year/$round/sprint.json" else "$year/sprint.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            constructorId = constructorId,
+            resource = "sprint.json"
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getPitStops(
         year: String,
         round: String,
+        driverId: String?,
+        stopNumber: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = "$year/$round/pitstops.json"
+        val resource = if (stopNumber != null) "pitstops/$stopNumber.json" else "pitstops.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            resource = resource
+        )
         return request(path, limit, offset)
     }
 
@@ -244,32 +393,96 @@ class DefaultJolpicaClient(
         year: String,
         round: String,
         lapNumber: String?,
+        driverId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = if (lapNumber != null) "$year/$round/laps/$lapNumber.json" else "$year/$round/laps.json"
+        val resource = if (lapNumber != null) "laps/$lapNumber.json" else "laps.json"
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            resource = resource
+        )
         return request(path, limit, offset)
     }
 
     override suspend fun getStatuses(
         year: String?,
         round: String?,
+        driverId: String?,
+        constructorId: String?,
         limit: Int?,
         offset: Int?
     ): ErgastResponse {
-        val path = buildPath(year, round, "status.json")
+        val path = buildPath(
+            year = year,
+            round = round,
+            driverId = driverId,
+            constructorId = constructorId,
+            resource = "status.json"
+        )
         return request(path, limit, offset)
+    }
+
+    override suspend fun getCustomEndpoint(
+        path: String,
+        limit: Int?,
+        offset: Int?
+    ): ErgastResponse {
+        val cleanPath = if (path.endsWith(".json")) path else "$path.json"
+        return request(cleanPath, limit, offset)
     }
 
     override fun close() {
         httpClient.close()
     }
 
-    private fun buildPath(year: String?, round: String?, resource: String): String {
-        return when {
-            year != null && round != null -> "$year/$round/$resource"
-            year != null -> "$year/$resource"
-            else -> resource
+    private fun buildPath(
+        year: String? = null,
+        round: String? = null,
+        driverId: String? = null,
+        constructorId: String? = null,
+        circuitId: String? = null,
+        grid: String? = null,
+        fastest: String? = null,
+        statusId: String? = null,
+        resource: String
+    ): String {
+        val segments = mutableListOf<String>()
+        if (year != null) {
+            segments.add(year)
+            if (round != null) {
+                segments.add(round)
+            }
         }
+        if (driverId != null) {
+            segments.add("drivers")
+            segments.add(driverId)
+        }
+        if (constructorId != null) {
+            segments.add("constructors")
+            segments.add(constructorId)
+        }
+        if (circuitId != null) {
+            segments.add("circuits")
+            segments.add(circuitId)
+        }
+        if (grid != null) {
+            segments.add("grid")
+            segments.add(grid)
+        }
+        if (fastest != null) {
+            segments.add("fastest")
+            segments.add(fastest)
+        }
+        if (statusId != null) {
+            segments.add("status")
+            segments.add(statusId)
+        }
+        if (resource.isNotEmpty()) {
+            segments.add(resource)
+        }
+        return segments.joinToString("/")
     }
 }

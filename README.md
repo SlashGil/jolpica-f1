@@ -10,7 +10,8 @@ A lightweight, pure **Kotlin Multiplatform (KMP)** library wrapping the [Jolpica
 
 ## 🚀 Features
 
-- 🏎️ **Complete Endpoint Coverage**: Drivers, Constructors, Circuits, Driver & Constructor Standings, Race Calendar, Race Results, Qualifying, Sprint Results, Pit Stops, Lap Times, and Finishing Statuses.
+- 🏎️ **100% Jolpica / Ergast API Coverage**: Drivers, Constructors, Circuits, Driver & Constructor Standings, Race Calendar, Race Results, Qualifying, Sprint Results, Pit Stops, Lap Times, Finishing Statuses, and Criteria Filtering.
+- 🎯 **Advanced Filter Parameters**: Query by `driverId`, `constructorId`, `circuitId`, `grid`, `fastest`, `statusId`, and `position` across all primary endpoints.
 - 🌐 **Kotlin Multiplatform**: Supports **JVM**, **Android**, and **iOS** (`iosX64`, `iosArm64`, `iosSimulatorArm64`).
 - ⚡ **Asynchronous & Non-Blocking**: Fully `suspend`-based API designed for Kotlin Coroutines and Swift `async/await`.
 - 📦 **Zero UI Dependencies**: Pure infrastructure library — easy to integrate into any KMP, Android, iOS, or JVM application.
@@ -69,21 +70,10 @@ class F1ViewModel: ObservableObject {
 
     // Swift Async/Await (iOS 15+)
     func fetchStandingsAsync() async throws {
-        let response = try await client.getDriverStandings(year: "2024", round: nil, limit: nil, offset: nil)
+        let response = try await client.getDriverStandings(year: "2024", round: nil, driverId: nil, position: nil, limit: nil, offset: nil)
         if let standings = response.mrData.standingsTable?.standingsLists.first?.driverStandings?.first {
             DispatchQueue.main.async {
                 self.driverName = "\(standings.driver.givenName) \(standings.driver.familyName)"
-            }
-        }
-    }
-
-    // Swift Completion Handler
-    func fetchStandings() {
-        client.getDriverStandings(year: "2024", round: nil, limit: nil, offset: nil) { response, error in
-            if let standings = response?.mrData.standingsTable?.standingsLists.first?.driverStandings?.first {
-                DispatchQueue.main.async {
-                    self.driverName = "\(standings.driver.givenName) \(standings.driver.familyName)"
-                }
             }
         }
     }
@@ -98,7 +88,6 @@ class F1ViewModel: ObservableObject {
 import io.github.slashgil.jolpica.client.JolpicaClient
 
 suspend fun main() {
-    // Instantiate the client (uses default Ktor client configuration)
     val client = JolpicaClient()
 
     try {
@@ -110,10 +99,13 @@ suspend fun main() {
             println("${standing.position}. ${standing.driver.givenName} ${standing.driver.familyName} - ${standing.points} pts")
         }
 
-        // Fetch Race Results for Round 1
-        val raceResponse = client.getRaceResults(year = "2024", round = "1")
-        val race = raceResponse.mrData.raceTable?.races?.firstOrNull()
-        println("Race: ${race?.raceName} at ${race?.circuit?.circuitName}")
+        // Filter Race Results for a specific driver & starting grid position
+        val raceResponse = client.getRaceResults(
+            year = "2023",
+            driverId = "alonso",
+            grid = "1"
+        )
+        println("Race Count: ${raceResponse.mrData.raceTable?.races?.size}")
 
     } finally {
         client.close()
@@ -125,21 +117,22 @@ suspend fun main() {
 
 ## 📖 API Reference & Endpoint Matrix
 
-| Method | Parameters | Jolpica F1 Endpoint Path |
+| Method | Supported Filter Criteria & Parameters | Jolpica F1 Endpoint Path Example |
 | :--- | :--- | :--- |
-| `getDriverStandings` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/driverstandings.json` |
-| `getConstructorStandings` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/constructorstandings.json` |
-| `getRaceResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/results.json` |
-| `getQualifyingResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/qualifying.json` |
-| `getSprintResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/sprint.json` |
-| `getSchedule` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}.json` |
-| `getDrivers` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/drivers.json` |
-| `getConstructors` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/constructors.json` |
-| `getCircuits` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/circuits.json` |
-| `getSeasons` | `limit: Int?`, `offset: Int?` | `/seasons.json` |
-| `getPitStops` | `year: String`, `round: String`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/pitstops.json` |
-| `getLaps` | `year: String`, `round: String`, `lapNumber: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/laps/{lapNumber}.json` |
-| `getStatuses` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/status.json` |
+| `getDriverStandings` | `year`, `round`, `driverId`, `position`, `limit`, `offset` | `/2023/drivers/verstappen/driverstandings.json` |
+| `getConstructorStandings` | `year`, `round`, `constructorId`, `position`, `limit`, `offset` | `/2023/constructors/red_bull/constructorstandings.json` |
+| `getRaceResults` | `year`, `round`, `driverId`, `constructorId`, `circuitId`, `grid`, `fastest`, `statusId`, `limit`, `offset` | `/2023/drivers/alonso/grid/1/results.json` |
+| `getQualifyingResults` | `year`, `round`, `driverId`, `constructorId`, `limit`, `offset` | `/2023/1/qualifying.json` |
+| `getSprintResults` | `year`, `round`, `driverId`, `constructorId`, `limit`, `offset` | `/2023/1/sprint.json` |
+| `getSchedule` | `year`, `round`, `circuitId`, `driverId`, `constructorId`, `limit`, `offset` | `/2024.json` |
+| `getDrivers` | `year`, `round`, `constructorId`, `circuitId`, `limit`, `offset` | `/2023/constructors/ferrari/drivers.json` |
+| `getConstructors` | `year`, `round`, `driverId`, `circuitId`, `limit`, `offset` | `/2023/drivers/hamilton/constructors.json` |
+| `getCircuits` | `year`, `round`, `driverId`, `constructorId`, `limit`, `offset` | `/2023/constructors/red_bull/circuits.json` |
+| `getSeasons` | `driverId`, `constructorId`, `circuitId`, `limit`, `offset` | `/drivers/hamilton/seasons.json` |
+| `getPitStops` | `year`, `round`, `driverId`, `stopNumber`, `limit`, `offset` | `/2023/1/drivers/verstappen/pitstops.json` |
+| `getLaps` | `year`, `round`, `lapNumber`, `driverId`, `limit`, `offset` | `/2023/1/laps/5.json` |
+| `getStatuses` | `year`, `round`, `driverId`, `constructorId`, `limit`, `offset` | `/2023/drivers/alonso/status.json` |
+| `getCustomEndpoint` | `path: String`, `limit`, `offset` | Direct query to any custom path |
 
 ---
 
@@ -149,9 +142,7 @@ You can pass a custom Ktor `HttpClient` (for logging, custom proxy, certificate 
 
 ```kotlin
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.logging.Logging
 import io.github.slashgil.jolpica.client.JolpicaClient
-import io.github.slashgil.jolpica.client.createDefaultHttpClient
 
 val customHttpClient = HttpClient {
     // Add custom Ktor plugins here

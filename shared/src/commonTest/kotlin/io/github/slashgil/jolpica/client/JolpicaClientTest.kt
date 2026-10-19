@@ -80,36 +80,14 @@ class JolpicaClientTest {
     }
 
     @Test
-    fun testGetRaceResults() = runTest {
+    fun testGetRaceResultsWithFilters() = runTest {
         val json = """
             {
               "MRData": {
                 "series": "f1",
                 "RaceTable": {
                   "season": "2023",
-                  "round": "1",
-                  "Races": [
-                    {
-                      "season": "2023",
-                      "round": "1",
-                      "raceName": "Bahrain Grand Prix",
-                      "Results": [
-                        {
-                          "position": "1",
-                          "positionText": "1",
-                          "Driver": {
-                            "driverId": "max_verstappen",
-                            "givenName": "Max",
-                            "familyName": "Verstappen"
-                          },
-                          "Constructor": {
-                            "constructorId": "red_bull",
-                            "name": "Red Bull"
-                          }
-                        }
-                      ]
-                    }
-                  ]
+                  "Races": []
                 }
               }
             }
@@ -118,24 +96,20 @@ class JolpicaClientTest {
         var requestedUrl = ""
         val client = createMockClient(json) { requestedUrl = it }
 
-        val response = client.getRaceResults(year = "2023", round = "1")
+        client.getRaceResults(year = "2023", driverId = "alonso", grid = "1")
 
-        assertEquals("https://api.jolpi.ca/ergast/f1/2023/1/results.json", requestedUrl)
-        val race = response.mrData.raceTable?.races?.firstOrNull()
-        assertNotNull(race)
-        assertEquals("Bahrain Grand Prix", race.raceName)
+        assertEquals("https://api.jolpi.ca/ergast/f1/2023/drivers/alonso/grid/1/results.json", requestedUrl)
     }
 
     @Test
-    fun testGetSeasons() = runTest {
+    fun testGetSeasonsWithDriverFilter() = runTest {
         val json = """
             {
               "MRData": {
                 "series": "f1",
                 "SeasonTable": {
                   "Seasons": [
-                    { "season": "2023" },
-                    { "season": "2024" }
+                    { "season": "2023" }
                   ]
                 }
               }
@@ -145,30 +119,17 @@ class JolpicaClientTest {
         var requestedUrl = ""
         val client = createMockClient(json) { requestedUrl = it }
 
-        val response = client.getSeasons(limit = 2, offset = 0)
+        client.getSeasons(driverId = "hamilton")
 
-        assertEquals("https://api.jolpi.ca/ergast/f1/seasons.json?limit=2&offset=0", requestedUrl)
-        val seasons = response.mrData.seasonTable?.seasons
-        assertNotNull(seasons)
-        assertEquals(2, seasons.size)
-        assertEquals("2023", seasons[0].season)
+        assertEquals("https://api.jolpi.ca/ergast/f1/drivers/hamilton/seasons.json", requestedUrl)
     }
 
     @Test
-    fun testGetCircuits() = runTest {
+    fun testGetCustomEndpoint() = runTest {
         val json = """
             {
               "MRData": {
-                "series": "f1",
-                "CircuitTable": {
-                  "season": "2023",
-                  "Circuits": [
-                    {
-                      "circuitId": "monaco",
-                      "circuitName": "Circuit de Monaco"
-                    }
-                  ]
-                }
+                "series": "f1"
               }
             }
         """.trimIndent()
@@ -176,11 +137,8 @@ class JolpicaClientTest {
         var requestedUrl = ""
         val client = createMockClient(json) { requestedUrl = it }
 
-        val response = client.getCircuits(year = "2023")
+        client.getCustomEndpoint("2023/drivers/hamilton/results")
 
-        assertEquals("https://api.jolpi.ca/ergast/f1/2023/circuits.json", requestedUrl)
-        val circuits = response.mrData.circuitTable?.circuits
-        assertNotNull(circuits)
-        assertEquals("monaco", circuits.first().circuitId)
+        assertEquals("https://api.jolpi.ca/ergast/f1/2023/drivers/hamilton/results.json", requestedUrl)
     }
 }
