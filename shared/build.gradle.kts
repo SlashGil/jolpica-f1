@@ -8,7 +8,8 @@ plugins {
 }
 
 group = "io.github.slashgil"
-version = System.getenv("VERSION_NAME") ?: "1.0.0-SNAPSHOT"
+val rawVersion = System.getenv("VERSION_NAME") ?: "1.0.0"
+version = (if (rawVersion.startsWith("v")) rawVersion.substring(1) else rawVersion).removeSuffix("-SNAPSHOT")
 
 kotlin {
     jvm()
