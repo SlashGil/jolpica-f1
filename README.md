@@ -1,31 +1,126 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Jolpica F1 Kotlin Multiplatform SDK
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.slashgil/shared.svg)](https://central.sonatype.com/search?q=g%3Aio.github.slashgil)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-blue.svg)](https://kotlinlang.org/docs/multiplatform.html)
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
-
-### Running the apps
-
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
-
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+A lightweight, pure **Kotlin Multiplatform (KMP)** library wrapping the [Jolpica F1 API](https://jolpi.ca/ergast/) (the modern Ergast Formula 1 REST API replacement). Built with **Ktor 3** and **Kotlinx Serialization**.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## 🚀 Features
+
+- 🏎️ **Complete Endpoint Coverage**: Drivers, Constructors, Circuits, Driver & Constructor Standings, Race Calendar, Race Results, Qualifying, Sprint Results, Pit Stops, Lap Times, and Finishing Statuses.
+- 🌐 **Kotlin Multiplatform**: Supports **JVM**, **Android**, and **iOS** (`iosX64`, `iosArm64`, `iosSimulatorArm64`).
+- ⚡ **Asynchronous & Non-Blocking**: Fully `suspend`-based API designed for Kotlin Coroutines.
+- 📦 **Zero UI Dependencies**: Pure infrastructure library — easy to integrate into any KMP, Android, iOS, or JVM application.
+
+---
+
+## 📦 Installation
+
+Add the dependency to your `build.gradle.kts`:
+
+```kotlin
+commonMain.dependencies {
+    implementation("io.github.slashgil:jolpica-kmp-sdk:<latest-version>")
+}
+```
+
+Or for single-platform JVM / Android projects:
+
+```kotlin
+dependencies {
+    implementation("io.github.slashgil:jolpica-kmp-sdk:<latest-version>")
+}
+```
+
+---
+
+## 💡 Quick Start
+
+```kotlin
+import io.github.slashgil.jolpica.client.JolpicaClient
+
+suspend fun main() {
+    // Instantiate the client (uses default Ktor client configuration)
+    val client = JolpicaClient()
+
+    try {
+        // Fetch 2024 Driver Standings
+        val standingsResponse = client.getDriverStandings(year = "2024")
+        val standings = standingsResponse.mrData.standingsTable?.standingsLists?.firstOrNull()?.driverStandings
+        
+        standings?.forEach { standing ->
+            println("${standing.position}. ${standing.driver.givenName} ${standing.driver.familyName} - ${standing.points} pts")
+        }
+
+        // Fetch Race Results for Round 1
+        val raceResponse = client.getRaceResults(year = "2024", round = "1")
+        val race = raceResponse.mrData.raceTable?.races?.firstOrNull()
+        println("Race: ${race?.raceName} at ${race?.circuit?.circuitName}")
+
+    } finally {
+        client.close()
+    }
+}
+```
+
+---
+
+## 📖 API Reference & Endpoint Matrix
+
+| Method | Parameters | Jolpica F1 Endpoint Path |
+| :--- | :--- | :--- |
+| `getDriverStandings` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/driverstandings.json` |
+| `getConstructorStandings` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/constructorstandings.json` |
+| `getRaceResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/results.json` |
+| `getQualifyingResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/qualifying.json` |
+| `getSprintResults` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/sprint.json` |
+| `getSchedule` | `year: String = "current"`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}.json` |
+| `getDrivers` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/drivers.json` |
+| `getConstructors` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/constructors.json` |
+| `getCircuits` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/circuits.json` |
+| `getSeasons` | `limit: Int?`, `offset: Int?` | `/seasons.json` |
+| `getPitStops` | `year: String`, `round: String`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/pitstops.json` |
+| `getLaps` | `year: String`, `round: String`, `lapNumber: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/laps/{lapNumber}.json` |
+| `getStatuses` | `year: String?`, `round: String?`, `limit: Int?`, `offset: Int?` | `/{year}/{round}/status.json` |
+
+---
+
+## 🔧 Customizing the Ktor Client
+
+You can pass a custom Ktor `HttpClient` (for logging, custom proxy, certificate pinning, or testing mocks):
+
+```kotlin
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.logging.Logging
+import io.github.slashgil.jolpica.client.JolpicaClient
+import io.github.slashgil.jolpica.client.createDefaultHttpClient
+
+val customHttpClient = HttpClient {
+    // Add custom Ktor plugins here
+}
+
+val client = JolpicaClient(httpClient = customHttpClient)
+```
+
+---
+
+## 🛠️ Building & Testing Locally
+
+To build the library and run unit tests locally:
+
+```bash
+# Build and run tests across all targets
+./gradlew :shared:check :shared:build
+
+# Publish to local Maven repository (~/.m2/repository)
+./gradlew :shared:publishToMavenLocal
+```
+
+---
+
+## 📄 License
+
+This library is published under the **MIT License**. See [LICENSE](LICENSE) for details.
