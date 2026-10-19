@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -14,6 +15,8 @@ version = (if (rawVersion.startsWith("v")) rawVersion.substring(1) else rawVersi
 kotlin {
     jvm()
 
+    val xcf = XCFramework("JolpicaKmpSdk")
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -22,6 +25,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "JolpicaKmpSdk"
             isStatic = true
+            xcf.add(this)
         }
     }
 

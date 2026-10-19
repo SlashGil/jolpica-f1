@@ -1,6 +1,6 @@
 # Jolpica F1 Kotlin Multiplatform SDK
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.slashgil/shared.svg)](https://central.sonatype.com/search?q=g%3Aio.github.slashgil)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.slashgil/jolpica-kmp-sdk.svg)](https://central.sonatype.com/search?q=g%3Aio.github.slashgil)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-blue.svg)](https://kotlinlang.org/docs/multiplatform.html)
 
@@ -12,12 +12,14 @@ A lightweight, pure **Kotlin Multiplatform (KMP)** library wrapping the [Jolpica
 
 - 🏎️ **Complete Endpoint Coverage**: Drivers, Constructors, Circuits, Driver & Constructor Standings, Race Calendar, Race Results, Qualifying, Sprint Results, Pit Stops, Lap Times, and Finishing Statuses.
 - 🌐 **Kotlin Multiplatform**: Supports **JVM**, **Android**, and **iOS** (`iosX64`, `iosArm64`, `iosSimulatorArm64`).
-- ⚡ **Asynchronous & Non-Blocking**: Fully `suspend`-based API designed for Kotlin Coroutines.
+- ⚡ **Asynchronous & Non-Blocking**: Fully `suspend`-based API designed for Kotlin Coroutines and Swift `async/await`.
 - 📦 **Zero UI Dependencies**: Pure infrastructure library — easy to integrate into any KMP, Android, iOS, or JVM application.
 
 ---
 
 ## 📦 Installation
+
+### Kotlin Multiplatform & Android / JVM Projects
 
 Add the dependency to your `build.gradle.kts`:
 
@@ -37,7 +39,60 @@ dependencies {
 
 ---
 
-## 💡 Quick Start
+## 🍏 iOS Integration (Swift & Xcode)
+
+### Option 1: KMP App
+If your iOS app is part of a Kotlin Multiplatform codebase, simply include the Maven Central dependency in `commonMain.dependencies` as shown above. Maven Central publishes `iosArm64`, `iosX64`, and `iosSimulatorArm64` targets automatically.
+
+### Option 2: Native Swift / Xcode Project (`XCFramework`)
+For native Xcode / SwiftUI projects, you can compile the library into a native `JolpicaKmpSdk.xcframework`:
+
+1. **Build the XCFramework**:
+   ```bash
+   ./gradlew :shared:assembleJolpicaKmpSdkXCFramework
+   ```
+2. **Add to Xcode**:
+   - Locate the output framework in `shared/build/XCFrameworks/release/JolpicaKmpSdk.xcframework`.
+   - Drag it into your Xcode project under **Target > General > Frameworks, Libraries, and Embedded Content**.
+   - Set the embedding option to **Embed & Sign**.
+
+### 📱 Swift Usage Example
+
+```swift
+import SwiftUI
+import JolpicaKmpSdk
+
+class F1ViewModel: ObservableObject {
+    private let client = JolpicaClientKt.JolpicaClient()
+    
+    @Published var driverName: String = ""
+
+    // Swift Async/Await (iOS 15+)
+    func fetchStandingsAsync() async throws {
+        let response = try await client.getDriverStandings(year: "2024", round: nil, limit: nil, offset: nil)
+        if let standings = response.mrData.standingsTable?.standingsLists.first?.driverStandings?.first {
+            DispatchQueue.main.async {
+                self.driverName = "\(standings.driver.givenName) \(standings.driver.familyName)"
+            }
+        }
+    }
+
+    // Swift Completion Handler
+    func fetchStandings() {
+        client.getDriverStandings(year: "2024", round: nil, limit: nil, offset: nil) { response, error in
+            if let standings = response?.mrData.standingsTable?.standingsLists.first?.driverStandings?.first {
+                DispatchQueue.main.async {
+                    self.driverName = "\(standings.driver.givenName) \(standings.driver.familyName)"
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
+## 💡 Quick Start (Kotlin)
 
 ```kotlin
 import io.github.slashgil.jolpica.client.JolpicaClient
@@ -109,11 +164,14 @@ val client = JolpicaClient(httpClient = customHttpClient)
 
 ## 🛠️ Building & Testing Locally
 
-To build the library and run unit tests locally:
+To build the library, run unit tests, or assemble the XCFramework:
 
 ```bash
 # Build and run tests across all targets
 ./gradlew :shared:check :shared:build
+
+# Generate XCFramework for iOS/Xcode
+./gradlew :shared:assembleJolpicaKmpSdkXCFramework
 
 # Publish to local Maven repository (~/.m2/repository)
 ./gradlew :shared:publishToMavenLocal
