@@ -1,5 +1,8 @@
 package io.github.slashgil.jolpica.data.mapper
 
+import io.github.slashgil.jolpica.domain.model.CircuitModel
+import io.github.slashgil.jolpica.domain.model.DriverModel
+import io.github.slashgil.jolpica.domain.model.ResultModel
 import io.github.slashgil.jolpica.model.Circuit
 import io.github.slashgil.jolpica.model.Constructor
 import io.github.slashgil.jolpica.model.Driver
@@ -12,7 +15,7 @@ import kotlin.test.assertNotNull
 class MapperTest {
 
     @Test
-    fun testDriverToDomain() {
+    fun testDriverFromDto() {
         val dto = Driver(
             driverId = "max_verstappen",
             permanentNumber = "33",
@@ -24,7 +27,7 @@ class MapperTest {
             nationality = "Dutch"
         )
 
-        val domain = dto.toDomain()
+        val domain = DriverModel.from(dto)
 
         assertEquals("max_verstappen", domain.driverId)
         assertEquals(33, domain.permanentNumber)
@@ -34,7 +37,7 @@ class MapperTest {
     }
 
     @Test
-    fun testCircuitToDomain() {
+    fun testCircuitFromDto() {
         val dto = Circuit(
             circuitId = "silverstone",
             circuitName = "Silverstone Circuit",
@@ -46,7 +49,7 @@ class MapperTest {
             )
         )
 
-        val domain = dto.toDomain()
+        val domain = CircuitModel.from(dto)
 
         assertEquals("silverstone", domain.circuitId)
         assertEquals("Silverstone Circuit", domain.circuitName)
@@ -57,7 +60,7 @@ class MapperTest {
     }
 
     @Test
-    fun testResultToDomain() {
+    fun testResultFromDto() {
         val dto = Result(
             number = "1",
             position = "1",
@@ -70,7 +73,7 @@ class MapperTest {
             status = "Finished"
         )
 
-        val domain = dto.toDomain()
+        val domain = ResultModel.from(dto)
 
         assertEquals(1, domain.position)
         assertEquals(25.0, domain.points)
