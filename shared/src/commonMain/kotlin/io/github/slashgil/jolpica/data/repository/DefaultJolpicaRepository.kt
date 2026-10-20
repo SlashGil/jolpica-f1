@@ -1,14 +1,6 @@
 package io.github.slashgil.jolpica.data.repository
 
 import io.github.slashgil.jolpica.client.JolpicaClient
-import io.github.slashgil.jolpica.data.mapper.toCircuitsPage
-import io.github.slashgil.jolpica.data.mapper.toConstructorStandingsPage
-import io.github.slashgil.jolpica.data.mapper.toConstructorsPage
-import io.github.slashgil.jolpica.data.mapper.toDriverStandingsPage
-import io.github.slashgil.jolpica.data.mapper.toDriversPage
-import io.github.slashgil.jolpica.data.mapper.toRacesPage
-import io.github.slashgil.jolpica.data.mapper.toSeasonsPage
-import io.github.slashgil.jolpica.data.mapper.toStatusesPage
 import io.github.slashgil.jolpica.domain.model.CircuitModel
 import io.github.slashgil.jolpica.domain.model.ConstructorModel
 import io.github.slashgil.jolpica.domain.model.ConstructorStandingModel
@@ -42,7 +34,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<SeasonModel> = safeCall {
-        client.getSeasons(driverId, constructorId, circuitId, limit, offset).toSeasonsPage()
+        Page.fromSeasons(client.getSeasons(driverId, constructorId, circuitId, limit, offset))
     }
 
     override suspend fun getCircuits(
@@ -53,7 +45,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<CircuitModel> = safeCall {
-        client.getCircuits(year, round, driverId, constructorId, limit, offset).toCircuitsPage()
+        Page.fromCircuits(client.getCircuits(year, round, driverId, constructorId, limit, offset))
     }
 
     override suspend fun getConstructors(
@@ -64,7 +56,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<ConstructorModel> = safeCall {
-        client.getConstructors(year, round, driverId, circuitId, limit, offset).toConstructorsPage()
+        Page.fromConstructors(client.getConstructors(year, round, driverId, circuitId, limit, offset))
     }
 
     override suspend fun getDrivers(
@@ -75,7 +67,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<DriverModel> = safeCall {
-        client.getDrivers(year, round, constructorId, circuitId, limit, offset).toDriversPage()
+        Page.fromDrivers(client.getDrivers(year, round, constructorId, circuitId, limit, offset))
     }
 
     override suspend fun getDriverStandings(
@@ -86,7 +78,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<DriverStandingModel> = safeCall {
-        client.getDriverStandings(year, round, driverId, position, limit, offset).toDriverStandingsPage()
+        Page.fromDriverStandings(client.getDriverStandings(year, round, driverId, position, limit, offset))
     }
 
     override suspend fun getConstructorStandings(
@@ -97,7 +89,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<ConstructorStandingModel> = safeCall {
-        client.getConstructorStandings(year, round, constructorId, position, limit, offset).toConstructorStandingsPage()
+        Page.fromConstructorStandings(client.getConstructorStandings(year, round, constructorId, position, limit, offset))
     }
 
     override suspend fun getSchedule(
@@ -109,7 +101,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getSchedule(year, round, circuitId, driverId, constructorId, limit, offset).toRacesPage()
+        Page.fromRaces(client.getSchedule(year, round, circuitId, driverId, constructorId, limit, offset))
     }
 
     override suspend fun getRaceResults(
@@ -124,7 +116,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getRaceResults(year, round, driverId, constructorId, circuitId, grid, fastest, statusId, limit, offset).toRacesPage()
+        Page.fromRaces(client.getRaceResults(year, round, driverId, constructorId, circuitId, grid, fastest, statusId, limit, offset))
     }
 
     override suspend fun getQualifyingResults(
@@ -135,7 +127,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getQualifyingResults(year, round, driverId, constructorId, limit, offset).toRacesPage()
+        Page.fromRaces(client.getQualifyingResults(year, round, driverId, constructorId, limit, offset))
     }
 
     override suspend fun getSprintResults(
@@ -146,7 +138,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getSprintResults(year, round, driverId, constructorId, limit, offset).toRacesPage()
+        Page.fromRaces(client.getSprintResults(year, round, driverId, constructorId, limit, offset))
     }
 
     override suspend fun getPitStops(
@@ -157,7 +149,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getPitStops(year, round, driverId, stopNumber, limit, offset).toRacesPage()
+        Page.fromRaces(client.getPitStops(year, round, driverId, stopNumber, limit, offset))
     }
 
     override suspend fun getLaps(
@@ -168,7 +160,7 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<RaceModel> = safeCall {
-        client.getLaps(year, round, lapNumber, driverId, limit, offset).toRacesPage()
+        Page.fromRaces(client.getLaps(year, round, lapNumber, driverId, limit, offset))
     }
 
     override suspend fun getStatuses(
@@ -179,6 +171,6 @@ class DefaultJolpicaRepository(
         limit: Int?,
         offset: Int?
     ): Page<StatusModel> = safeCall {
-        client.getStatuses(year, round, driverId, constructorId, limit, offset).toStatusesPage()
+        Page.fromStatuses(client.getStatuses(year, round, driverId, constructorId, limit, offset))
     }
 }
