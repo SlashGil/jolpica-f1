@@ -59,7 +59,7 @@ mavenPublishing {
     coordinates("io.github.slashgil", "jolpica-kmp-sdk", project.version.toString())
 
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    signAllPublications()
+    // signAllPublications()
 
     pom {
         name.set("Jolpica F1 KMP SDK")
