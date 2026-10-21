@@ -1,6 +1,6 @@
 # Jolpica F1 Kotlin Multiplatform SDK
 
-[![JitPack](https://jitpack.io/v/slashgil/JolpicaF1.svg)](https://jitpack.io/#slashgil/JolpicaF1)
+[![Jitpack](https://jitpack.io/v/SlashGil/jolpica-f1.svg)](https://jitpack.io/#SlashGil/jolpica-f1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-blue.svg)](https://kotlinlang.org/docs/multiplatform.html)
 
