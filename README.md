@@ -1,40 +1,47 @@
 # Jolpica F1 Kotlin Multiplatform SDK
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.slashgil/jolpica-kmp-sdk.svg)](https://central.sonatype.com/search?q=g%3Aio.github.slashgil)
+[![JitPack](https://jitpack.io/v/slashgil/JolpicaF1.svg)](https://jitpack.io/#slashgil/JolpicaF1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-blue.svg)](https://kotlinlang.org/docs/multiplatform.html)
 
-A lightweight, pure **Kotlin Multiplatform (KMP)** library wrapping the [Jolpica F1 API](https://jolpi.ca/ergast/) (the modern Ergast Formula 1 REST API replacement). Built with **Ktor 3** and **Kotlinx Serialization**.
+A lightweight, pure **Kotlin Multiplatform (KMP)** library wrapping the [Jolpica F1 API](https://jolpi.ca/ergast/) (the modern Ergast Formula 1 REST API replacement). Built with **Ktor 3**, **Kotlinx Serialization**, and **Koin DI**. Includes strongly typed **Domain Entities**, **Clean Architecture Use Cases**, **Result state handling (`Success`, `Error`, `Loading`)**, and **Flow reactive state streams**.
 
 ---
 
 ## 🚀 Features
 
 - 🏎️ **100% Jolpica / Ergast API Coverage**: Drivers, Constructors, Circuits, Driver & Constructor Standings, Race Calendar, Race Results, Qualifying, Sprint Results, Pit Stops, Lap Times, Finishing Statuses, and Criteria Filtering.
-- 🎯 **Advanced Filter Parameters**: Query by `driverId`, `constructorId`, `circuitId`, `grid`, `fastest`, `statusId`, and `position` across all primary endpoints.
+- 🎯 **Domain Entities & Clean Architecture**: Strongly-typed `DriverModel`, `RaceModel`, `CircuitModel`, `ConstructorModel`, `StandingModel`, etc., wrapped in generic `Page<T>` pagination containers.
+- 🔄 **UI State & Reactive Flow Streams**: Custom `Result<T>` (`Success`, `Error`, `Loading`) and `.asFlow(...)` Use Case extensions for Jetpack Compose, Compose Multiplatform, StateFlow, and SwiftUI.
+- 💉 **Koin Dependency Injection**: Built-in Koin modules (`networkModule`, `repositoryModule`, `useCaseModule`, `jolpicaModule`) and `initKoin` helper.
 - 🌐 **Kotlin Multiplatform**: Supports **JVM**, **Android**, and **iOS** (`iosX64`, `iosArm64`, `iosSimulatorArm64`).
 - ⚡ **Asynchronous & Non-Blocking**: Fully `suspend`-based API designed for Kotlin Coroutines and Swift `async/await`.
-- 📦 **Zero UI Dependencies**: Pure infrastructure library — easy to integrate into any KMP, Android, iOS, or JVM application.
 
 ---
 
 ## 📦 Installation
 
-### Kotlin Multiplatform & Android / JVM Projects
+### 1. Add JitPack Repository
 
-Add the dependency to your `build.gradle.kts`:
+In your `settings.gradle.kts`:
 
 ```kotlin
-commonMain.dependencies {
-    implementation("io.github.slashgil:jolpica-kmp-sdk:<latest-version>")
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
 }
 ```
 
-Or for single-platform JVM / Android projects:
+### 2. Add Dependency
+
+In your `commonMain` or module `build.gradle.kts`:
 
 ```kotlin
-dependencies {
-    implementation("io.github.slashgil:jolpica-kmp-sdk:<latest-version>")
+commonMain.dependencies {
+    implementation("com.github.slashgil.JolpicaF1:shared:v1.0.2")
 }
 ```
 
@@ -85,30 +92,38 @@ class F1ViewModel: ObservableObject {
 ## 💡 Quick Start (Kotlin)
 
 ```kotlin
-import io.github.slashgil.jolpica.client.JolpicaClient
+import io.github.slashgil.jolpica.JolpicaSdk
+import io.github.slashgil.jolpica.domain.model.Result
+import io.github.slashgil.jolpica.domain.model.onError
+import io.github.slashgil.jolpica.domain.model.onSuccess
 
 suspend fun main() {
-    val client = JolpicaClient()
+    val sdk = JolpicaSdk()
 
     try {
-        // Fetch 2024 Driver Standings
-        val standingsResponse = client.getDriverStandings(year = "2024")
-        val standings = standingsResponse.mrData.standingsTable?.standingsLists?.firstOrNull()?.driverStandings
+        // Fetch 2024 Driver Standings via UseCase
+        val result = sdk.getDriverStandings(year = "2024")
         
-        standings?.forEach { standing ->
-            println("${standing.position}. ${standing.driver.givenName} ${standing.driver.familyName} - ${standing.points} pts")
+        result.onSuccess { page ->
+            page.items.forEach { standing ->
+                println("${standing.position}. ${standing.driver.fullName} - ${standing.points} pts")
+            }
+        }.onError { exception ->
+            println("Error fetching standings: ${exception.message}")
         }
 
-        // Filter Race Results for a specific driver & starting grid position
-        val raceResponse = client.getRaceResults(
-            year = "2023",
-            driverId = "alonso",
-            grid = "1"
-        )
-        println("Race Count: ${raceResponse.mrData.raceTable?.races?.size}")
+        // Collect UI State Flow (emits Loading -> Success or Error)
+        sdk.getRaceResults.asFlow(year = "2023", driverId = "alonso", grid = "1")
+            .collect { state ->
+                when (state) {
+                    is Result.Loading -> println("Loading race results...")
+                    is Result.Success -> println("Fetched ${state.data.items.size} races")
+                    is Result.Error -> println("Error: ${state.exception.message}")
+                }
+            }
 
     } finally {
-        client.close()
+        sdk.close()
     }
 }
 ```
