@@ -58,10 +58,7 @@ kotlin {
 }
 
 mavenPublishing {
-    coordinates("io.github.slashgil", "jolpica-kmp-sdk", project.version.toString())
-
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    // signAllPublications()
+    coordinates("com.github.slashgil.JolpicaF1", "shared", project.version.toString())
 
     pom {
         name.set("Jolpica F1 KMP SDK")
