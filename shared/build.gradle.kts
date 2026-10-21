@@ -9,8 +9,7 @@ plugins {
 }
 
 group = "io.github.slashgil"
-val rawVersion = System.getenv("VERSION_NAME") ?: "1.0.0"
-version = (if (rawVersion.startsWith("v")) rawVersion.substring(1) else rawVersion).removeSuffix("-SNAPSHOT")
+version = "1.0.2"
 
 kotlin {
     jvm()
@@ -46,11 +45,13 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.koin.test)
         }
     }
 }
